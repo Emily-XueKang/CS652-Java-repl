@@ -1,16 +1,14 @@
 package cs652.repl;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.nio.Buffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import javax.tools.*;
 import com.sun.source.util.JavacTask;
 import javafx.beans.binding.ObjectExpression;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -26,22 +24,25 @@ import java.net.URLClassLoader;
 
 
 public class JavaREPL {
+	private static Path DEFAULT_PATH;
+	private static ClassLoader loader;
+
 	public static void main(String[] args) throws IOException {
-		//exec(new InputStreamReader(System.in));
-		System.out.print("import java.io.*\n" + "import java.util.*\n");
+		DEFAULT_PATH = Files.createTempDirectory("temp");
+		loader = new URLClassLoader(new URL[]{DEFAULT_PATH.toUri().toURL()});
+		exec(new InputStreamReader(System.in));
 	}
 
 	public static void exec(Reader r) throws IOException {
 		BufferedReader stdin = new BufferedReader(r);
 		NestedReader reader = new NestedReader(stdin);
 		int classNumber = 0;
-        URL tmpURL = createTempDirectory().toURI().toURL();
-        ClassLoader loader = new URLClassLoader(new URL[]{tmpURL});
+
 
 		while (true) {  //while not end of file, if isdeclaration, save java file decl; else save java file statments, then exec
 			System.out.print("> ");
 			String java = reader.getNestedString();
-			// TODO
+
             if(java.length() == 0) continue;
 
             String className;
@@ -68,10 +69,11 @@ public class JavaREPL {
 			    statement = java;
 			    newcode = getCode(className,extendSuper,declaration,statement);
 			}
+
+			writeFile(DEFAULT_PATH.toString(), className, newcode);
+            boolean success = compile(className);
+			if (success) exec(loader, className, "exec");
             classNumber++;
-
-
-            exec(loader, className,"exec");
 
         }
 
@@ -133,13 +135,14 @@ public class JavaREPL {
 	 * and http://www.informit.com/articles/article.aspx?p=2027052&seqNum=2
 	 * Modified by XueKang
 	 */
-	public static Boolean compile(String fileName) throws IOException {
+	public static Boolean compile(String className) throws IOException {
+		String filename = DEFAULT_PATH.toString() + "/" + className + ".java";
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
 		StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
 		Iterable<? extends JavaFileObject> compilationUnits = fileManager
-				.getJavaFileObjectsFromStrings(Arrays.asList(fileName)); //Construct an in-memory java source file from dynamic code
-		String[] compileOptions = new String[]{"-g", "-d", "-cd"} ;//need to be verified
+				.getJavaFileObjectsFromStrings(Arrays.asList(filename)); //Construct an in-memory java source file from dynamic code
+		String[] compileOptions = new String[]{"-g", "-d", "-cp"} ;//need to be verified
 		Iterable<String> compilationOptions = Arrays.asList(compileOptions);
 		JavacTask task = (JavacTask)
 				compiler.getTask(null, fileManager, diagnostics,
@@ -152,42 +155,74 @@ public class JavaREPL {
 //
 //	}
 	public static void exec(ClassLoader loader, String className, String methodName){
-        Class cl = loader.loadClass(className);
-        Method f1 = cl.getDeclaredMethod(methodName);
+        try{
+        	Class cl = loader.loadClass(className);
+			Method f1 = cl.getDeclaredMethod(methodName);
 
-        Object o = cl.newInstance();
-        f1.invoke(null,null);
+			Object o = cl.newInstance();
+			f1.invoke(null,null);
+		}catch (Exception e){
+        	System.out.println(e.getStackTrace());
+		}
+
 	}
 
+	/**
+	 * Reference sourse: https://www.mkyong.com/java/how-to-write-to-file-in-java-bufferedwriter-example/
+	 * @param dir
+	 * @param fileName
+	 * @param content
+	 */
 	public static void writeFile(String dir, String fileName, String content){
 		//SimpleJavaFileObject file = new SimpleJavaFileObject();
+		BufferedWriter bw = null;
+		FileWriter fw = null;
+		String FILENAME = "\\" + fileName + ".java";
+		try {
 
+			fw = new FileWriter(FILENAME);
+			bw = new BufferedWriter(fw);
+			bw.write(content);
 
+			//System.out.println("Done");
 
+		} catch (IOException e) {
+
+			e.printStackTrace();
+
+		} finally {
+
+			try {
+
+				if (bw != null)
+					bw.close();
+
+				if (fw != null)
+					fw.close();
+
+			} catch (IOException ex) {
+
+				ex.printStackTrace();
+
+			}
+
+		}
 	}
 
     /**
      * Copy from http://stackoverflow.com/questions/617414/how-to-create-a-temporary-directory-folder-in-java
+	 * Reference :http://docs.oracle.com/javase/7/docs/api/java/nio/file/Files.html#createTempDirectory%28java.nio.file.Path
+	 * ,%20java.lang.String,%20java.nio.file.attribute.FileAttribute...%29
      * @return a
      * @throws IOException
      */
-    public static File createTempDirectory()
+    public static Path createTempDirectory()
             throws IOException
     {
-        final File temp;
+        final Path temp;
 
-        temp = File.createTempFile("temp", Long.toString(System.nanoTime()));
-
-        if(!(temp.delete()))
-        {
-            throw new IOException("Could not delete temp file: " + temp.getAbsolutePath());
-        }
-
-        if(!(temp.mkdir()))
-        {
-            throw new IOException("Could not create temp directory: " + temp.getAbsolutePath());
-        }
-
+        temp = Files.createTempFile("temp", Long.toString(System.nanoTime()));
+		
         return (temp);
     }
 
