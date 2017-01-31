@@ -56,7 +56,7 @@ public class NestedReader{
             System.out.print("> ");
             try {
                 String java = reader.getNestedString();
-                System.out.println(java.length());
+                System.out.println(java);
             } catch(IOException e) {
                 System.out.println(e.toString());
                 break;
