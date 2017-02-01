@@ -17,10 +17,17 @@ public class JavaREPL {
 	private static Path DEFAULT_DIR;
 	private static ClassLoader loader;
 	private static String PRINT_PREFIX = "print ";
+	static {
+	    try{
+            DEFAULT_DIR = Files.createTempDirectory("temp");
+            loader = new URLClassLoader(new URL[]{DEFAULT_DIR.toUri().toURL()});
+        }catch (IOException e){
+            System.out.println("Fail to initialize class:" + e.getStackTrace());
+        }
+    }
 
-	public static void main(String[] args) throws IOException {
-		DEFAULT_DIR = Files.createTempDirectory("temp");
-		loader = new URLClassLoader(new URL[]{DEFAULT_DIR.toUri().toURL()});
+    public static void main(String[] args) throws IOException {
+
 		exec(new InputStreamReader(System.in));
 	}
 
@@ -30,14 +37,22 @@ public class JavaREPL {
 		int classNumber = 0;
 		String statement = "";
 		String declaration = "";
-		String newcode;
+		String newcode,java;
 		String className;
 		String extendSuper;
 
 		while (true) {
 			//while not end of file, if isDeclaration, save java file decl; else save java file statements, then exec
 			System.out.print("> ");
-			String java = reader.getNestedString();
+			try{
+			    java = reader.getNestedString();
+            }catch(EOFException eof){
+			    break;//break while true loop once receive ctrl+D
+            }
+
+			if(java.startsWith(PRINT_PREFIX)){
+			    java = "System.out.println(" + java.substring(PRINT_PREFIX.length(),java.length()-1) + ");";
+            }
 			if (java.length() == 0) continue;
 
 			if (classNumber != 0) {
@@ -60,8 +75,11 @@ public class JavaREPL {
 
 			File classFile = writeFile(className, newcode);
 			boolean success = compile(classFile);
-			if (success) exec(loader, className, "exec");
-			classNumber++;
+			if (success) {
+			    exec(loader, className, "exec");
+                classNumber++;
+            }
+
 		}
 
 	}

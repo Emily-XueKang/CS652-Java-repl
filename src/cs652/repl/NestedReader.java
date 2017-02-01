@@ -5,6 +5,7 @@ package cs652.repl;
  */
 
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Stack;
@@ -31,6 +32,7 @@ public class NestedReader{
                 case '}': { if (stack.isEmpty() || stack.pop() != '}') EOS = true; break; }
                 case ']': { if (stack.isEmpty() || stack.pop() != ']') EOS = true; break; }
                 case ')': { if (stack.isEmpty() || stack.pop() != ')') EOS = true; break; }
+                case -1: throw new EOFException();
             }
             if ((stack.empty() && c == '\n') || EOS == true) break;
             this.consume();
@@ -41,7 +43,7 @@ public class NestedReader{
         String result = buf.toString();
         buf = new StringBuilder();
         c = 0;
-        return result;
+        return result.trim();
     }
 
     public void consume() throws IOException{
