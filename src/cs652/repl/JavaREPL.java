@@ -6,12 +6,12 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import javax.tools.*;
 import com.sun.source.util.JavacTask;
-
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
+import java.util.Random;
 
 
 public class JavaREPL {
@@ -32,7 +32,25 @@ public class JavaREPL {
 		exec(new InputStreamReader(System.in));
 	}
 
+	private static boolean clearDir() {
+		File directory = DEFAULT_DIR.toFile();
+		boolean success = true;
+		// Delete all files in directory
+		File[] files = directory.listFiles();
+		for (File file : files)
+		{
+			if (!file.delete())
+			{
+				success = false;
+			}
+		}
+		return success;
+	}
+
 	public static void exec(Reader r) throws IOException {
+		clearDir();
+		Random rand = new Random();
+		String classPrefix = "Interp"+"_"+rand.nextInt(Integer.MAX_VALUE)+"_";
 		BufferedReader stdin = new BufferedReader(r);
 		NestedReader reader = new NestedReader(stdin);
 		int classNumber = 0;
@@ -45,17 +63,13 @@ public class JavaREPL {
 		while (true) {
 			//while not end of file, if isDeclaration, save java file decl; else save java file statements, then exec
 			System.out.print("> ");
+			//System.out.println("before getnewcode classNumber: "+ classNumber);
 			try{
 			    java = reader.getNestedString();
             }catch(EOFException eof){
 			    break;//break while true loop once receive ctrl+D
             }
 
-//			if (java.contains("//")) {
-//				int startOfcomments = java.indexOf("/");
-//				java = java.substring(0,startOfcomments);
-//			}
-			//System.out.println("java is: " + java);
 
 			if(java.startsWith(PRINT_PREFIX)){
 			    java = "System.out.println(" + java.substring(PRINT_PREFIX.length(),java.length()-1) + ");";
@@ -65,32 +79,36 @@ public class JavaREPL {
 			if (java.length() == 0) continue;
 
 			if (classNumber != 0) {
-				extendSuper = "Interp_" + (classNumber - 1);
-				className = "Interp_" + classNumber;
+				extendSuper = classPrefix + (classNumber - 1);
+				className = classPrefix + classNumber;
 			} else {
-				className = "Interp_" + classNumber;
+				className = classPrefix + classNumber;
 				extendSuper = "";
 			}
 
 			statement = "";
 			declaration = "";
 			if (isDeclaration(java)) {
+//				System.out.println("is declare");
 				declaration = java;
 				newcode = getCode(className, extendSuper, declaration, statement);
 			} else {
+//				System.out.println("not declare");
 				statement = java;
 				newcode = getCode(className, extendSuper, declaration, statement);
 			}
 
 
-			//System.out.println("newcode is: " + newcode);
+//			System.out.println("newcode is: " + newcode);
 			File classFile = writeFile(className, newcode);
 			boolean success = compile(classFile);
-			if (success) {
-			    exec(loader, className, "exec");
-                classNumber++;
-            }
 
+			if (success) {
+//				System.out.println("before execution:");
+			    exec(loader, className, "exec");
+//				System.out.println("after execution:");
+            }
+            classNumber++;
 		}
 
 	}
@@ -104,7 +122,7 @@ public class JavaREPL {
 	 */
 	public static boolean isDeclaration(String line) throws IOException {
 		String lineTocode = "import java.io.*;\n" + "import java.util.*;\n" + "public class Bogus {\n" + "public static " + line + "\n" + "public static void exec() {\n}\n}";
-		String tempFileName = "Bogus.java";
+		String tempFileName = "Bogus";
 		File file = writeFile(tempFileName, lineTocode);
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 		DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
@@ -143,7 +161,7 @@ public class JavaREPL {
 		if (declaration.length() != 0) {
 			classbody = "public static " + declaration + "\n" + "public static void exec() {\n}\n";
 		}
-		if (className.equals("Interp_0")) {
+		if (className.endsWith("_0")) {
 			javacode = importing + "public class " + className + " {\n" + classbody + "\n}";
 		} else {
 			javacode = importing + "public class " + className + " extends " + extendSuper + " {\n" + classbody + "\n}";
@@ -182,18 +200,25 @@ public class JavaREPL {
 			}
 			//System.out.println(diagnostics.getDiagnostics());
 		}
+//		List<Diagnostic<? extends JavaFileObject>> diagnosticsList = diagnostics.getDiagnostics();
+//		for (Diagnostic<? extends JavaFileObject> diagnostic : diagnosticsList) {
+//			System.out.println("getSource: "+ diagnostic.getSource());
+//			System.out.println("getCode: " + diagnostic.getCode());
+//
+//		}
+
 		return success;
 	}
 
 	public static void exec(ClassLoader loader, String className, String methodName) {
 		try {
 			Class cl = loader.loadClass(className);
-			Method f1 = cl.getDeclaredMethod(methodName);
 
-			Object o = cl.newInstance();
+			Method f1 = cl.getDeclaredMethod(methodName);
+			//Object o = cl.newInstance();
 			f1.invoke(null, null); // call the exec() method in generated java file
 		} catch (Exception e) {
-			System.err.println(e.getStackTrace());
+			e.printStackTrace();
 		}
 	}
 
@@ -211,9 +236,22 @@ public class JavaREPL {
 		File parentDir = DEFAULT_DIR.toFile();
 		File file = new File(parentDir, fileName);
 		try {
-			file.createNewFile();
-			bw = Files.newBufferedWriter(file.toPath());
+			if(file.exists()){
+				boolean deleteSuccess = file.delete();
+			}
+			boolean createdSuccess = file.createNewFile();
+			fw = new FileWriter(file, false);
+			bw = new BufferedWriter(fw);
 			bw.write(content);
+			bw.flush();
+			FileReader fd = new FileReader(file);
+			StringBuilder sb = new StringBuilder();
+			int c = fd.read();
+			while (c!= -1) {
+				sb.append((char)c);
+				c=fd.read();
+			}
+			assert sb.toString().equals(content);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -227,6 +265,7 @@ public class JavaREPL {
 				ex.printStackTrace();
 			}
 		}
+
 		return file;
 	}
 }
