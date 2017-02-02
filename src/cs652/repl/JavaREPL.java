@@ -51,9 +51,17 @@ public class JavaREPL {
 			    break;//break while true loop once receive ctrl+D
             }
 
+//			if (java.contains("//")) {
+//				int startOfcomments = java.indexOf("/");
+//				java = java.substring(0,startOfcomments);
+//			}
+			//System.out.println("java is: " + java);
+
 			if(java.startsWith(PRINT_PREFIX)){
 			    java = "System.out.println(" + java.substring(PRINT_PREFIX.length(),java.length()-1) + ");";
             }
+			//System.out.println("java is: " + java);
+
 			if (java.length() == 0) continue;
 
 			if (classNumber != 0) {
@@ -74,6 +82,8 @@ public class JavaREPL {
 				newcode = getCode(className, extendSuper, declaration, statement);
 			}
 
+
+			//System.out.println("newcode is: " + newcode);
 			File classFile = writeFile(className, newcode);
 			boolean success = compile(classFile);
 			if (success) {
@@ -166,7 +176,7 @@ public class JavaREPL {
 			List<Diagnostic<? extends JavaFileObject>> diagnosticsList = diagnostics.getDiagnostics();
 			for (Diagnostic<? extends JavaFileObject> diagnostic : diagnosticsList) {
 				// read error dertails from the diagnostic object
-				System.out.println("Line " + diagnostic.getLineNumber() + ": " + diagnostic.getMessage(null));
+				System.out.println("line " + (int)(diagnostic.getLineNumber()+2) + ": " + diagnostic.getMessage(null));
 //				System.out.println("getSource: "+ diagnostic.getSource());
 //				System.out.println("getCode: " + diagnostic.getCode());
 			}
@@ -181,7 +191,7 @@ public class JavaREPL {
 			Method f1 = cl.getDeclaredMethod(methodName);
 
 			Object o = cl.newInstance();
-			f1.invoke(null, null);
+			f1.invoke(null, null); // call the exec() method in generated java file
 		} catch (Exception e) {
 			System.err.println(e.getStackTrace());
 		}

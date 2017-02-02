@@ -32,6 +32,7 @@ public class NestedReader{
                 case '}': { if (stack.isEmpty() || stack.pop() != '}') EOS = true; break; }
                 case ']': { if (stack.isEmpty() || stack.pop() != ']') EOS = true; break; }
                 case ')': { if (stack.isEmpty() || stack.pop() != ')') EOS = true; break; }
+                case '/': { while(c != '\n') {c = input.read();} break;}
                 case -1: throw new EOFException();
             }
             if ((stack.empty() && c == '\n') || EOS == true) break;
