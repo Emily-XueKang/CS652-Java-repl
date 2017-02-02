@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.List;
 
 
 public class JavaREPL {
@@ -161,8 +162,15 @@ public class JavaREPL {
 
 		boolean success = task.call();
 		fileManager.close();
-		if (diagnostics.getDiagnostics().size() != 0) {
-			System.out.println(diagnostics.getDiagnostics());
+		if (success == false) {
+			List<Diagnostic<? extends JavaFileObject>> diagnosticsList = diagnostics.getDiagnostics();
+			for (Diagnostic<? extends JavaFileObject> diagnostic : diagnosticsList) {
+				// read error dertails from the diagnostic object
+				System.out.println("Line " + diagnostic.getLineNumber() + ": " + diagnostic.getMessage(null));
+//				System.out.println("getSource: "+ diagnostic.getSource());
+//				System.out.println("getCode: " + diagnostic.getCode());
+			}
+			//System.out.println(diagnostics.getDiagnostics());
 		}
 		return success;
 	}
@@ -175,9 +183,8 @@ public class JavaREPL {
 			Object o = cl.newInstance();
 			f1.invoke(null, null);
 		} catch (Exception e) {
-			System.out.println(e.getStackTrace());
+			System.err.println(e.getStackTrace());
 		}
-
 	}
 
 	/**
