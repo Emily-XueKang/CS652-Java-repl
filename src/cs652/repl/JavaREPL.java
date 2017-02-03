@@ -35,7 +35,7 @@ public class JavaREPL {
 	/**
 	 * Delete all files in directory, as we need to generate new java files with sames name
 	 * and don't want the new files failed being overwritten.
-	 * @return
+	 * @return true if the directory has been cleared, false if not.
 	 */
 	private static boolean clearDir() {
 		File directory = DEFAULT_DIR.toFile();
@@ -175,7 +175,7 @@ public class JavaREPL {
 				compiler.getTask(null, fileManager, diagnostics, compilationOptions, null, compilationUnits);
 		boolean success = task.call();
 		fileManager.close();
-		if (success == false) {
+		if (!success) {
 			List<Diagnostic<? extends JavaFileObject>> diagnosticsList = diagnostics.getDiagnostics();
 			for (Diagnostic<? extends JavaFileObject> diagnostic : diagnosticsList) {
 				// read error dertails from the diagnostic object
@@ -189,9 +189,9 @@ public class JavaREPL {
 
 	/**
 	 * Call the method which actually perform the execution of the statement user input in the generated java file.
-	 * @param loader
-	 * @param className
-	 * @param methodName
+	 * @param loader classloader
+	 * @param className classname of the generated class
+	 * @param methodName method to be called by reflection
 	 */
 	public static void exec(ClassLoader loader, String className, String methodName) {
 		try {
@@ -206,8 +206,8 @@ public class JavaREPL {
 	/**
 	 * Reference sourse: https://www.mkyong.com/java/how-to-write-to-file-in-java-bufferedwriter-example/
 	 *
-	 * @param className
-	 * @param content
+	 * @param className classname of the generated class
+	 * @param content the code to be written to the file
 	 */
 	public static File writeFile(String className, String content) {
 		BufferedWriter bw = null;
