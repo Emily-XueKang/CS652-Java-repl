@@ -32,14 +32,12 @@ public class NestedReader{
                 case '}': { if (stack.isEmpty() || stack.pop() != '}') EOS = true; break; }
                 case ']': { if (stack.isEmpty() || stack.pop() != ']') EOS = true; break; }
                 case ')': { if (stack.isEmpty() || stack.pop() != ')') EOS = true; break; }
-                case '/': { while(c != '\n') {c = input.read();} break;}
-                case -1: throw new EOFException();
+                case '/': { while(c != '\n') {c = input.read();} break;} //when encounter /,read this line to the end, while do not send this line to new code.
+                case -1: throw new EOFException();  //when encounter end of file(input character -1), give out an End_of_File exception,which will be catched by method in JavaREPL.
             }
             if ((stack.empty() && c == '\n') || EOS == true) break;
             this.consume();
-
         }
-
         // reset the variables for next call
         String result = buf.toString();
         buf = new StringBuilder();
