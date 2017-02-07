@@ -1,0 +1,54 @@
+[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for edu.usfca.cs652:repl:jar:1.0
+[WARNING] 'build.plugins.plugin.version' for org.apache.maven.plugins:maven-compiler-plugin is missing. @ line 61, column 12
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Java REPL 1.0
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:1.2:enforce (enforce-maven) @ repl ---
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ repl ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 38 resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ repl ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 2 source files to /Users/parrt/grading/cs652/S17/repl-Emily-XueKang/target/classes
+[WARNING] /Users/parrt/grading/cs652/S17/repl-Emily-XueKang/src/cs652/repl/JavaREPL.java: /Users/parrt/grading/cs652/S17/repl-Emily-XueKang/src/cs652/repl/JavaREPL.java uses unchecked or unsafe operations.
+[WARNING] /Users/parrt/grading/cs652/S17/repl-Emily-XueKang/src/cs652/repl/JavaREPL.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ repl ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] skip non existing resourceDirectory /Users/parrt/grading/cs652/S17/repl-Emily-XueKang/src/test/resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.1:testCompile (default-testCompile) @ repl ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 1 source file to /Users/parrt/grading/cs652/S17/repl-Emily-XueKang/target/test-classes
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ repl ---
+[INFO] Surefire report directory: /Users/parrt/grading/cs652/S17/repl-Emily-XueKang/target/surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running cs652.repl.TestREPL
+Tests run: 19, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.799 sec
+
+Results :
+
+Tests run: 19, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 2.167 s
+[INFO] Finished at: 2017-02-07T09:58:41-08:00
+[INFO] Final Memory: 18M/370M
+[INFO] ------------------------------------------------------------------------
